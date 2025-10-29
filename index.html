@@ -19,6 +19,8 @@
                     <p class="subtitle">Network Tools for Econet, NetOne & Telecel</p>
                 </div>
             </div>
+            <!-- Admin Access Button -->
+            <button id="admin-access-btn" class="btn-admin-access">🔐 Admin</button>
         </div>
     </header>
 
@@ -30,6 +32,7 @@
         <button class="tab-btn" data-tab="apn-settings">⚙️ APN Settings</button>
         <button class="tab-btn" data-tab="device-check">📲 Device Check</button>
         <button class="tab-btn" data-tab="tips">💡 Tips</button>
+        <button class="tab-btn" data-tab="donate">💝 Donate</button>
         <button class="tab-btn" data-tab="about">ℹ️ About</button>
     </nav>
 
@@ -192,6 +195,45 @@
             <div id="tips-container" class="tips-container"></div>
         </section>
 
+        <!-- Donate Tab -->
+        <section id="donate" class="tab-content">
+            <div class="donate-section">
+                <h3>💝 Support ZimNet Optimizer</h3>
+                <p>If you find this tool helpful, consider supporting the development!</p>
+                <p>Your donations help keep this project free and regularly updated with new features.</p>
+                
+                <div class="donate-methods">
+                    <div class="donate-card">
+                        <h4>📱 EcoCash</h4>
+                        <div class="donate-detail" id="ecocash-number">
+                            +263 XX XXX XXXX
+                        </div>
+                        <button class="btn-copy-small" onclick="copyToClipboard(document.getElementById('ecocash-number').textContent)">📋 Copy Number</button>
+                    </div>
+                    
+                    <div class="donate-card">
+                        <h4>💳 OneMoney</h4>
+                        <div class="donate-detail" id="onemoney-number">
+                            +263 XX XXX XXXX
+                        </div>
+                        <button class="btn-copy-small" onclick="copyToClipboard(document.getElementById('onemoney-number').textContent)">📋 Copy Number</button>
+                    </div>
+                    
+                    <div class="donate-card">
+                        <h4>💰 PayPal</h4>
+                        <div class="donate-detail" id="paypal-email">
+                            zimnet@gmail.com
+                        </div>
+                        <button class="btn-copy-small" onclick="copyToClipboard(document.getElementById('paypal-email').textContent)">📋 Copy Email</button>
+                    </div>
+                </div>
+                
+                <p style="margin-top: 30px; font-size: 0.95em;">
+                    🙏 Thank you for your support! Every contribution helps improve this tool for everyone.
+                </p>
+            </div>
+        </section>
+
         <!-- About Tab -->
         <section id="about" class="tab-content">
             <h2>ℹ️ About ZimNet Optimizer</h2>
@@ -243,6 +285,106 @@
             </div>
         </section>
     </main>
+
+    <!-- Admin Login Modal -->
+    <div id="admin-login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">×</span>
+            <h2>🔐 Admin Login</h2>
+            <div class="login-form">
+                <input type="text" id="admin-username" class="input-field" placeholder="Username">
+                <input type="password" id="admin-password" class="input-field" placeholder="Password">
+                <button id="admin-login-btn" class="btn btn-primary">Login</button>
+                <p id="login-error" class="error-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="admin-panel-modal" class="modal">
+        <div class="modal-content admin-panel-content">
+            <span class="close-admin-panel">×</span>
+            <h2>⚙️ Admin Panel</h2>
+            
+            <div class="admin-tabs">
+                <button class="admin-tab-btn active" data-admin-tab="sni-management">SNI Bugs</button>
+                <button class="admin-tab-btn" data-admin-tab="donation-settings">Donation Info</button>
+                <button class="admin-tab-btn" data-admin-tab="tips-management">Tips Management</button>
+                <button class="admin-tab-btn" data-admin-tab="apn-management">APN Settings</button>
+            </div>
+
+            <!-- SNI Management -->
+            <div id="sni-management" class="admin-tab-content active">
+                <h3>Manage SNI Bug Hosts</h3>
+                <div class="admin-form">
+                    <select id="admin-carrier" class="input-field">
+                        <option value="econet">Econet</option>
+                        <option value="netone">NetOne</option>
+                        <option value="telecel">Telecel</option>
+                    </select>
+                    <input type="text" id="admin-sni-host" class="input-field" placeholder="SNI Host (e.g., www.google.com)">
+                    <input type="text" id="admin-proxy-ip" class="input-field" placeholder="Proxy IP (e.g., 104.16.132.229)">
+                    <input type="text" id="admin-proxy-port" class="input-field" placeholder="Port (e.g., 443)">
+                    <select id="admin-sni-status" class="input-field">
+                        <option value="working">✅ Working</option>
+                        <option value="unstable">⚠️ Unstable</option>
+                        <option value="not-working">❌ Not Working</option>
+                    </select>
+                    <button id="add-sni-btn" class="btn btn-primary">Add SNI Host</button>
+                </div>
+                <div id="admin-sni-list" class="admin-list"></div>
+            </div>
+
+            <!-- Donation Settings -->
+            <div id="donation-settings" class="admin-tab-content">
+                <h3>Update Donation Information</h3>
+                <div class="admin-form">
+                    <label>EcoCash Number:</label>
+                    <input type="text" id="admin-ecocash" class="input-field" placeholder="+263 XX XXX XXXX">
+                    
+                    <label>OneMoney Number:</label>
+                    <input type="text" id="admin-onemoney" class="input-field" placeholder="+263 XX XXX XXXX">
+                    
+                    <label>PayPal Email:</label>
+                    <input type="email" id="admin-paypal" class="input-field" placeholder="email@example.com">
+                    
+                    <button id="update-donation-btn" class="btn btn-primary">Update Donation Info</button>
+                </div>
+            </div>
+
+            <!-- Tips Management -->
+            <div id="tips-management" class="admin-tab-content">
+                <h3>Manage Tips</h3>
+                <div class="admin-form">
+                    <input type="text" id="admin-tip-title" class="input-field" placeholder="Tip Title">
+                    <textarea id="admin-tip-content" class="input-field" placeholder="Tip Content" rows="4"></textarea>
+                    <input type="text" id="admin-tip-icon" class="input-field" placeholder="Icon (emoji or text)">
+                    <button id="add-tip-btn" class="btn btn-primary">Add Tip</button>
+                </div>
+                <div id="admin-tips-list" class="admin-list"></div>
+            </div>
+
+            <!-- APN Management -->
+            <div id="apn-management" class="admin-tab-content">
+                <h3>Manage APN Settings</h3>
+                <div class="admin-form">
+                    <select id="admin-apn-carrier" class="input-field">
+                        <option value="econet">Econet</option>
+                        <option value="netone">NetOne</option>
+                        <option value="telecel">Telecel</option>
+                    </select>
+                    <input type="text" id="admin-apn-name" class="input-field" placeholder="APN Name">
+                    <input type="text" id="admin-apn-value" class="input-field" placeholder="APN Value">
+                    <input type="text" id="admin-apn-proxy" class="input-field" placeholder="Proxy (optional)">
+                    <input type="text" id="admin-apn-port" class="input-field" placeholder="Port (optional)">
+                    <input type="text" id="admin-apn-mmsc" class="input-field" placeholder="MMSC (optional)">
+                    <button id="update-apn-btn" class="btn btn-primary">Update APN</button>
+                </div>
+            </div>
+
+            <button id="admin-logout-btn" class="btn btn-secondary">Logout</button>
+        </div>
+    </div>
 
     <footer>
         <div class="container">
