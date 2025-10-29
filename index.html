@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZimNet Optimizer - Network Tools for Zimbabwe</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>📡 ZimNet Optimizer</h1>
+            <p>Network Tools for Econet, NetOne & Telecel</p>
+        </div>
+    </header>
+
+    <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="speed-test">Speed Test</button>
+        <button class="tab-btn" data-tab="carriers">Carriers</button>
+        <button class="tab-btn" data-tab="device-check">Device Check</button>
+        <button class="tab-btn" data-tab="apn-settings">APN Settings</button>
+        <button class="tab-btn" data-tab="tips">Network Tips</button>
+        <button class="tab-btn" data-tab="coverage">5G Coverage</button>
+    </nav>
+
+    <main class="container">
+        <!-- Speed Test Tab -->
+        <section id="speed-test" class="tab-content active">
+            <h2>Network Speed Test</h2>
+            <div class="speed-test-box">
+                <div class="speed-display">
+                    <div class="speed-circle">
+                        <span id="speed-value">0</span>
+                        <span class="speed-unit">Mbps</span>
+                    </div>
+                </div>
+                <div class="speed-stats">
+                    <div class="stat">
+                        <span class="stat-label">Download</span>
+                        <span class="stat-value" id="download-speed">-- Mbps</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Upload</span>
+                        <span class="stat-value" id="upload-speed">-- Mbps</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Ping</span>
+                        <span class="stat-value" id="ping">-- ms</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Network Type</span>
+                        <span class="stat-value" id="network-type">--</span>
+                    </div>
+                </div>
+                <button id="start-test" class="btn btn-primary">Start Speed Test</button>
+                <div id="test-status" class="test-status"></div>
+            </div>
+
+            <div class="signal-strength">
+                <h3>Signal Strength Monitor</h3>
+                <div class="signal-bars">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                </div>
+                <p id="signal-quality">Checking signal...</p>
+            </div>
+        </section>
+
+        <!-- Carriers Tab -->
+        <section id="carriers" class="tab-content">
+            <h2>Zimbabwe Network Carriers</h2>
+            <div id="carrier-cards" class="carrier-grid">
+                <!-- Dynamically loaded -->
+            </div>
+        </section>
+
+        <!-- Device Check Tab -->
+        <section id="device-check" class="tab-content">
+            <h2>Check 5G Compatibility</h2>
+            <div class="device-checker">
+                <input type="text" id="device-input" placeholder="Enter your phone model (e.g., Huawei P40 Pro)" class="input-field">
+                <button id="check-device-btn" class="btn btn-primary">Check Device</button>
+                
+                <div id="device-result" class="device-result"></div>
+
+                <h3>Popular Huawei 5G Devices</h3>
+                <div id="device-list" class="device-list"></div>
+            </div>
+        </section>
+
+        <!-- APN Settings Tab -->
+        <section id="apn-settings" class="tab-content">
+            <h2>APN Configuration Guide</h2>
+            <div class="apn-selector">
+                <label for="carrier-select">Select Your Carrier:</label>
+                <select id="carrier-select" class="input-field">
+                    <option value="">Choose carrier...</option>
+                    <option value="econet">Econet Wireless</option>
+                    <option value="netone">NetOne</option>
+                    <option value="telecel">Telecel</option>
+                </select>
+            </div>
+            <div id="apn-details" class="apn-details"></div>
+
+            <div class="apn-instructions">
+                <h3>How to Configure APN</h3>
+                <ol>
+                    <li>Go to <strong>Settings</strong> on your phone</li>
+                    <li>Tap <strong>Mobile Network</strong> or <strong>Wireless & Networks</strong></li>
+                    <li>Select <strong>Access Point Names (APN)</strong></li>
+                    <li>Tap the <strong>+</strong> icon to add new APN</li>
+                    <li>Enter the settings shown above</li>
+                    <li>Save and select the new APN</li>
+                    <li>Restart your phone</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Tips Tab -->
+        <section id="tips" class="tab-content">
+            <h2>Network Optimization Tips</h2>
+            <div id="tips-container" class="tips-container">
+                <!-- Dynamically loaded -->
+            </div>
+        </section>
+
+        <!-- Coverage Tab -->
+        <section id="coverage" class="tab-content">
+            <h2>5G Coverage in Zimbabwe</h2>
+            <div class="coverage-info">
+                <div class="coverage-card">
+                    <h3>🟢 Econet 5G</h3>
+                    <p><strong>Status:</strong> Available</p>
+                    <p><strong>Coverage:</strong> Harare, Bulawayo (expanding)</p>
+                    <p><strong>Launch:</strong> 2023</p>
+                    <ul>
+                        <li>CBD areas in major cities</li>
+                        <li>Business districts</li>
+                        <li>Selected residential areas</li>
+                    </ul>
+                </div>
+
+                <div class="coverage-card">
+                    <h3>🟡 NetOne 5G</h3>
+                    <p><strong>Status:</strong> Testing Phase</p>
+                    <p><strong>Coverage:</strong> Limited pilot areas</p>
+                    <p><strong>Expected:</strong> 2024-2025 rollout</p>
+                    <ul>
+                        <li>Pilot programs in Harare</li>
+                        <li>Expansion planned</li>
+                    </ul>
+                </div>
+
+                <div class="coverage-card">
+                    <h3>🔴 Telecel 5G</h3>
+                    <p><strong>Status:</strong> Not Available</p>
+                    <p><strong>Coverage:</strong> 4G/LTE only</p>
+                    <p><strong>Focus:</strong> 4G network expansion</p>
+                </div>
+            </div>
+
+            <div class="coverage-map-placeholder">
+                <h3>Coverage Map</h3>
+                <p>📍 Check with your carrier for detailed coverage in your area</p>
+                <div class="map-links">
+                    <a href="https://www.econet.co.zw" target="_blank" class="btn">Econet Coverage</a>
+                    <a href="https://www.netone.co.zw" target="_blank" class="btn">NetOne Coverage</a>
+                    <a href="https://www.telecel.co.zw" target="_blank" class="btn">Telecel Coverage</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2024 ZimNet Optimizer | Made for Zimbabwe 🇿🇼</p>
+            <p><small>This tool provides information and optimization tips. Actual 5G requires compatible device and carrier support.</small></p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
