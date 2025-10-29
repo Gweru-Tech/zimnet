@@ -549,5 +549,68 @@ if ('connection' in navigator) {
     }
 }
 
+
+// ============================================
+// COPY TO CLIPBOARD FUNCTION
+// ============================================
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('✅ Copied to clipboard: ' + text);
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        alert('❌ Failed to copy. Please copy manually.');
+    });
+}
+
+// ============================================
+// ADMIN PANEL FUNCTIONALITY
+// ============================================
+
+const ADMIN_CREDENTIALS = {
+    username: 'ntando',
+    password: 'ntando'
+};
+
+let isAdminLoggedIn = false;
+
+// LocalStorage keys
+const STORAGE_KEYS = {
+    SNI_BUGS: 'zimnet_sni_bugs',
+    DONATION_INFO: 'zimnet_donation_info',
+    TIPS: 'zimnet_tips',
+    APN_SETTINGS: 'zimnet_apn_settings'
+};
+
+// Initialize data structure
+function initializeData() {
+    if (!localStorage.getItem(STORAGE_KEYS.SNI_BUGS)) {
+        const defaultSNI = {
+            econet: [
+                { host: 'www.google.com', proxyIp: '104.16.132.229', port: '443', status: 'working' }
+            ],
+            netone: [
+                { host: 'www.whatsapp.com', proxyIp: '104.16.132.229', port: '443', status: 'working' }
+            ],
+            telecel: [
+                { host: 'www.facebook.com', proxyIp: '104.16.132.229', port: '443', status: 'working' }
+            ]
+        };
+        localStorage.setItem(STORAGE_KEYS.SNI_BUGS, JSON.stringify(defaultSNI));
+    }
+    
+    if (!localStorage.getItem(STORAGE_KEYS.DONATION_INFO)) {
+        const defaultDonation = {
+            ecocash: '+263 XX XXX XXXX',
+            onemoney: '+263 XX XXX XXXX',
+            paypal: 'zimnet@gmail.com'
+        };
+        localStorage.setItem(STORAGE_KEYS.DONATION_INFO, JSON.stringify(defaultDonation));
+    }
+    
+    if (!localStorage.getItem(STORAGE_KEYS.TIPS)) {
+        const defaultTips = [
+            { title: 'Enable 4G/LTE Only', content: 'Go to Settings > Mobile Network > Preferred Network Type > Select LTE/4G only for faster speeds.', icon: '📶' },
+            { title: 'Clear Network Cache', content: 'Restart your phone daily to clear network cache and refresh connections.', icon:
+
 // Make copyToClipboard available globally
 window.copyToClipboard = copyToClipboard;
