@@ -1,323 +1,465 @@
 require("./all/global")
-const { BufferJSON, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, getBinaryNodeChildren, generateWAMessageContent, generateWAMessage, prepareWAMessageMedia, areJidsSameUser, getContentType } = require('@whiskeysockets/baileys')
-const fs = require('fs')
-const util = require('util')
-const chalk = require('chalk')
-const { exec, spawn, execSync } = require("child_process")
-const axios = require('axios')
-const path = require('path')
-const os = require('os')
-const moment = require('moment-timezone')
-const { JSDOM } = require('jsdom')
-const { color, bgcolor } = require('./all/color')
-const { smsg, tanggal, getTime, isUrl, sleep, clockString, runtime, fetchJson, getBuffer, jsonformat, format, parseMention, getRandom, getGroupAdmins } = require('./all/myfunc')
+const func = require("./all/place")
+const fs = require("fs")
+const axios = require("axios")
+const chalk = require("chalk")
+const moment = require("moment-timezone")
+const { exec } = require("child_process")
+const speed = require("performance-now")
 
-// Emojis for reactions
-const emojis = ['🐞', '❤️', '💚', '💛', '💙', '💜', '🔥', '⭐', '✨', '🌟', '👍', '😊', '🎉', '🚀']
+module.exports = async (Ladybug, m, store) => {
+    try {
+        const body = (m.mtype === 'conversation') ? m.message.conversation :
+                     (m.mtype === 'imageMessage') ? m.message.imageMessage.caption :
+                     (m.mtype === 'videoMessage') ? m.message.videoMessage.caption :
+                     (m.mtype === 'extendedTextMessage') ? m.message.extendedTextMessage.text :
+                     (m.mtype === 'buttonsResponseMessage') ? m.message.buttonsResponseMessage.selectedButtonId :
+                     (m.mtype === 'listResponseMessage') ? m.message.listResponseMessage.singleSelectReply.selectedRowId :
+                     (m.mtype === 'templateButtonReplyMessage') ? m.message.templateButtonReplyMessage.selectedId :
+                     (m.mtype === 'messageContextInfo') ? (m.message.buttonsResponseMessage?.selectedButtonId || m.message.listResponseMessage?.singleSelectReply.selectedRowId || m.text) : ''
 
-module.exports = Tkm = async (Tkm, m, chatUpdate, store) => {
-try {
-var body = (m.mtype === 'conversation') ? m.message.conversation : 
-(m.mtype == 'imageMessage') ? m.message.imageMessage.caption : 
-(m.mtype == 'videoMessage') ? m.message.videoMessage.caption : 
-(m.mtype == 'extendedTextMessage') ? m.message.extendedTextMessage.text : 
-(m.mtype == 'buttonsResponseMessage') ? m.message.buttonsResponseMessage.selectedButtonId : 
-(m.mtype == 'listResponseMessage') ? m.message.listResponseMessage.singleSelectReply.selectedRowId : 
-(m.mtype == 'templateButtonReplyMessage') ? m.message.templateButtonReplyMessage.selectedId : 
-(m.mtype === 'messageContextInfo') ? (m.message.buttonsResponseMessage?.selectedButtonId || m.message.listResponseMessage?.singleSelectReply.selectedRowId || m.text) : ''
+        const budy = (typeof m.text === 'string' ? m.text : '')
+        const prefix = /^[°zZ#$@*+,.?=''():√%!¢£¥€π¤ΠΦ_&><`™©®Δ^βα~¦|/\\©^]/.test(body) ? body.match(/^[°zZ#$@*+,.?=''():√%¢£¥€π¤ΠΦ_&><!`™©®Δ^βα~¦|/\\©^]/gi) : '.'
+        const isCmd = body.startsWith(prefix)
+        const command = isCmd ? body.slice(prefix.length).trim().split(' ').shift().toLowerCase() : ''
+        const args = body.trim().split(/ +/).slice(1)
+        const text = q = args.join(" ")
+        const quoted = m.quoted ? m.quoted : m
+        const mime = (quoted.msg || quoted).mimetype || ''
+        const isMedia = /image|video|sticker|audio/.test(mime)
+        
+        // Bot Info
+        const botNumber = await Ladybug.decodeJid(Ladybug.user.id)
+        const isOwner = [botNumber, ...global.owner].map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(m.sender)
+        const isGroup = m.key.remoteJid.endsWith('@g.us')
+        const groupMetadata = isGroup ? await Ladybug.groupMetadata(m.chat).catch(e => {}) : ''
+        const groupName = isGroup ? groupMetadata.subject : ''
+        const participants = isGroup ? await groupMetadata.participants : ''
+        const groupAdmins = isGroup ? await participants.filter(v => v.admin !== null).map(v => v.id) : ''
+        const groupOwner = isGroup ? groupMetadata.owner : ''
+        const isBotAdmins = isGroup ? groupAdmins.includes(botNumber) : false
+        const isAdmins = isGroup ? groupAdmins.includes(m.sender) : false
+        
+        // Push Messages to Console
+        if (m.message) {
+            console.log(chalk.black(chalk.bgWhite('[ MESSAGE ]')),
+                chalk.black(chalk.bgGreen(new Date().toLocaleString())),
+                chalk.black(chalk.bgBlue(budy || m.mtype)) + '\n' +
+                chalk.magenta('=> From'),
+                chalk.green(m.pushName),
+                chalk.yellow(m.sender) + '\n' +
+                chalk.blueBright('=> In'),
+                chalk.green(isGroup ? m.pushName : 'Private Chat', m.chat))
+        }
 
-var budy = (typeof m.text == 'string' ? m.text : '')
-const prefix = /^[°•π÷×¶∆£¢€¥®™✓_=|~!?#$%^&.+-,\/\\©^]/.test(body) ? body.match(/^[°•π÷×¶∆£¢€¥®™✓_=|~!?#$%^&.+-,\/\\©^]/gi) : '.'
-const isCmd = body.startsWith(prefix)
-const command = body.replace(prefix, '').trim().split(/ +/).shift().toLowerCase()
-const args = body.trim().split(/ +/).slice(1)
-const pushname = m.pushName || "No Name"
-const botNumber = await Tkm.decodeJid(Tkm.user.id)
-const isCreator = [botNumber, ...global.owner].map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(m.sender)
-const itsMe = m.sender == botNumber ? true : false
-const text = q = args.join(" ")
-const quoted = m.quoted ? m.quoted : m
-const mime = (quoted.msg || quoted).mimetype || ''
-const isMedia = /image|video|sticker|audio/.test(mime)
-const from = m.key.remoteJid
-const groupMetadata = m.isGroup ? await Tkm.groupMetadata(m.chat).catch(e => {}) : ''
-const sender = m.isGroup ? (m.key.participant ? m.key.participant : m.participant) : m.key.remoteJid
-const groupName = m.isGroup ? groupMetadata.subject : ''
-const participants = m.isGroup ? await groupMetadata.participants : ''
-const groupAdmins = m.isGroup ? await getGroupAdmins(participants) : ''
-const isBotAdmins = m.isGroup ? groupAdmins.includes(botNumber) : false
-const isAdmins = m.isGroup ? groupAdmins.includes(m.sender) : false
-const isGroup = m.chat.endsWith('@g.us')
-const groupOwner = m.isGroup ? groupMetadata.owner : ''
-const isGroupOwner = m.isGroup ? (groupOwner ? groupOwner : groupAdmins).includes(m.sender) : false
+        // Response Function
+        const reply = (teks) => {
+            Ladybug.sendMessage(m.chat, { text: teks }, { quoted: m })
+        }
 
-// Auto Read Messages
-if (global.autoread) {
-Tkm.readMessages([m.key])
-}
+        // Auto Read & Presence Update
+        if (global.autoread) {
+            Ladybug.readMessages([m.key])
+        }
 
-// Auto Typing
-if (global.autotyping && isCmd) {
-await Tkm.sendPresenceUpdate('composing', from)
-}
+        // ===================== COMMANDS =====================
 
-// Auto React
-if (global.autoreact && isCmd) {
-const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)]
-await Tkm.sendMessage(from, {
-react: {
-text: randomEmoji,
-key: m.key
-}
-})
-}
+        switch (command) {
+            
+            // ========== GENERAL COMMANDS ==========
+            
+            case 'menu':
+            case 'help':
+            case 'commands': {
+                let menuText = `
+╭━━━━『 *LADYBUG BOT* 』━━━━┈ ⳹
+│ 🐞 *Bot Name:* Ladybug MD
+│ 👤 *Owner:* ${global.owner}
+│ ⏰ *Time:* ${moment.tz('Africa/Harare').format('HH:mm:ss')}
+│ 📅 *Date:* ${moment.tz('Africa/Harare').format('DD/MM/YYYY')}
+│ 👥 *Users:* ${Object.keys(global.db.data.users).length}
+│ 🤖 *Prefix:* [ ${prefix} ]
+╰━━━━━━━━━━━━━━━━━━┈ ⳹
 
-// Console log
-if (m.message) {
-console.log(chalk.black(chalk.bgWhite('[ MESSAGE ]')), chalk.black(chalk.bgGreen(new Date)), chalk.black(chalk.bgBlue(budy || m.mtype)) + '\n' + chalk.magenta('=> From'), chalk.green(pushname), chalk.yellow(m.sender) + '\n' + chalk.blueBright('=> In'), chalk.green(m.isGroup ? pushname : 'Private Chat', m.chat))
-}
-
-// Reply function
-const reply = (teks) => {
-Tkm.sendMessage(from, { text: teks, contextInfo: {"externalAdReply": {"title": `🐞 Ladybug Bot`,"body": `Hi ${pushname}`, "previewType": "PHOTO","thumbnailUrl": ``,"thumbnail": fs.readFileSync(`./media/ladybug.jpg`),"sourceUrl": ``}}}, { quoted: m })
-}
-
-// Auto Reaction on receiving message (not just commands)
-if (global.autoreact && !isCmd && !m.isBaileys) {
-const autoReactEmoji = ['🐞', '👍', '❤️']
-const selectedEmoji = autoReactEmoji[Math.floor(Math.random() * autoReactEmoji.length)]
-await Tkm.sendMessage(from, {
-react: {
-text: selectedEmoji,
-key: m.key
-}
-}).catch(e => {})
-}
-
-// Command Handler
-switch(command) {
-case 'menu':
-case 'help': {
-let menuText = `╭━━━『 *🐞 LADYBUG BOT* 』━━━╮
-│
-│ 👋 Hello, ${pushname}!
-│ 
-│ 📱 Bot Number: ${botNumber.split('@')[0]}
-│ 🕐 Time: ${moment.tz('Africa/Harare').format('HH:mm:ss')}
-│ 📅 Date: ${moment.tz('Africa/Harare').format('DD/MM/YYYY')}
-│ ⏱️ Runtime: ${runtime(process.uptime())}
-│
-╰━━━━━━━━━━━━━━━━━━━╯
-
-╭━━━『 *MAIN MENU* 』━━━╮
-│
+╭━━━『 *GENERAL* 』━━━┈ ⳹
 │ • ${prefix}menu
-│ • ${prefix}info
-│ • ${prefix}owner
-│ • ${prefix}script
+│ • ${prefix}alive
 │ • ${prefix}ping
 │ • ${prefix}runtime
-│
-╰━━━━━━━━━━━━━━━━━━━╯
+│ • ${prefix}speed
+│ • ${prefix}owner
+│ • ${prefix}script
+│ • ${prefix}donate
+╰━━━━━━━━━━━━━━━┈ ⳹
 
-╭━━━『 *GROUP MENU* 』━━━╮
-│
-│ • ${prefix}welcome
-│ • ${prefix}tagall
-│ • ${prefix}hidetag
-│ • ${prefix}kick
-│ • ${prefix}add
-│ • ${prefix}promote
-│ • ${prefix}demote
-│ • ${prefix}linkgroup
-│
-╰━━━━━━━━━━━━━━━━━━━╯
+╭━━━『 *OWNER* 』━━━┈ ⳹
+│ • ${prefix}join [link]
+│ • ${prefix}leave
+│ • ${prefix}block [user]
+│ • ${prefix}unblock [user]
+│ • ${prefix}setpp [reply image]
+│ • ${prefix}setname [text]
+│ • ${prefix}setstatus [text]
+│ • ${prefix}broadcast [text]
+│ • ${prefix}eval [code]
+│ • ${prefix}exec [terminal]
+╰━━━━━━━━━━━━━━━┈ ⳹
 
-╭━━━『 *DOWNLOAD MENU* 』━━━╮
-│
-│ • ${prefix}play
-│ • ${prefix}ytmp3
-│ • ${prefix}ytmp4
-│ • ${prefix}tiktok
-│ • ${prefix}instagram
-│ • ${prefix}facebook
-│
-╰━━━━━━━━━━━━━━━━━━━╯
+╭━━━『 *GROUP* 』━━━┈ ⳹
+│ • ${prefix}welcome [on/off]
+│ • ${prefix}antilink [on/off]
+│ • ${prefix}promote [@user]
+│ • ${prefix}demote [@user]
+│ • ${prefix}kick [@user]
+│ • ${prefix}add [number]
+│ • ${prefix}tagall [text]
+│ • ${prefix}hidetag [text]
+│ • ${prefix}group [open/close]
+│ • ${prefix}setppgroup [reply img]
+│ • ${prefix}setname [text]
+│ • ${prefix}setdesc [text]
+╰━━━━━━━━━━━━━━━┈ ⳹
 
-╭━━━『 *FUN MENU* 』━━━╮
-│
-│ • ${prefix}dare
-│ • ${prefix}truth
+╭━━━『 *DOWNLOAD* 』━━━┈ ⳹
+│ • ${prefix}play [song name]
+│ • ${prefix}ytmp3 [url]
+│ • ${prefix}ytmp4 [url]
+│ • ${prefix}tiktok [url]
+│ • ${prefix}instagram [url]
+│ • ${prefix}facebook [url]
+│ • ${prefix}twitter [url]
+╰━━━━━━━━━━━━━━━┈ ⳹
+
+╭━━━『 *SEARCH* 』━━━┈ ⳹
+│ • ${prefix}google [query]
+│ • ${prefix}ytsearch [query]
+│ • ${prefix}lyrics [song]
+│ • ${prefix}weather [city]
+│ • ${prefix}wikipedia [query]
+│ • ${prefix}image [query]
+╰━━━━━━━━━━━━━━━┈ ⳹
+
+╭━━━『 *FUN* 』━━━┈ ⳹
 │ • ${prefix}joke
 │ • ${prefix}quote
-│
-╰━━━━━━━━━━━━━━━━━━━╯
+│ • ${prefix}truth
+│ • ${prefix}dare
+│ • ${prefix}fact
+│ • ${prefix}meme
+╰━━━━━━━━━━━━━━━┈ ⳹
 
-╭━━━『 *OWNER MENU* 』━━━╮
-│
-│ • ${prefix}self
-│ • ${prefix}public
-│ • ${prefix}join
-│ • ${prefix}leave
-│ • ${prefix}block
-│ • ${prefix}unblock
-│ • ${prefix}backup
-│
-╰━━━━━━━━━━━━━━━━━━━╯
+╭━━━『 *TOOLS* 』━━━┈ ⳹
+│ • ${prefix}sticker [reply img/vid]
+│ • ${prefix}toimage [reply sticker]
+│ • ${prefix}tovideo [reply sticker]
+│ • ${prefix}toaudio [reply video]
+│ • ${prefix}tomp3 [reply video]
+│ • ${prefix}translate [lang] [text]
+│ • ${prefix}tts [lang] [text]
+╰━━━━━━━━━━━━━━━┈ ⳹
 
-🐞 *Ladybug Bot* - Your Reliable Assistant
-Powered by NinjaBot Technology`
+🐞 *Ladybug Bot* - WhatsApp Bot 2025
+`
+                await Ladybug.sendMessage(m.chat, {
+                    image: { url: 'https://i.ibb.co/0BZfPq6/ladybug.jpg' },
+                    caption: menuText,
+                    footer: '© Ladybug Bot 2025',
+                    buttons: [
+                        { buttonId: prefix + 'owner', buttonText: { displayText: '👤 Owner' }, type: 1 },
+                        { buttonId: prefix + 'script', buttonText: { displayText: '📜 Script' }, type: 1 },
+                        { buttonId: prefix + 'donate', buttonText: { displayText: '💰 Donate' }, type: 1 }
+                    ],
+                    headerType: 4
+                }, { quoted: m })
+            }
+            break
 
-reply(menuText)
-}
-break
+            case 'alive':
+            case 'bot': {
+                const start = speed()
+                const end = speed()
+                const latency = (end - start).toFixed(4)
+                
+                reply(`🐞 *LADYBUG BOT IS ALIVE!*
 
-case 'info':
-case 'botinfo': {
-let infoText = `╭━━━『 *🐞 BOT INFO* 』━━━╮
-│
-│ 🤖 Bot Name: Ladybug MD
-│ 👨‍💻 Creator: NinjaTech AI
-│ 📱 Number: ${botNumber.split('@')[0]}
-│ 🌐 Platform: WhatsApp
-│ ⏱️ Runtime: ${runtime(process.uptime())}
-│ 💾 Memory: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)}MB
-│ 📊 OS: ${os.platform()}
-│ ⚡ Speed: Fast & Reliable
-│
-│ ✨ Features:
-│ • Auto Read ✓
-│ • Auto Typing ✓
-│ • Auto React ✓
-│ • 24/7 Active ✓
-│
-╰━━━━━━━━━━━━━━━━━━━╯`
-reply(infoText)
-}
-break
+✓ Speed: ${latency}ms
+✓ Runtime: ${func.runtime(process.uptime())}
+✓ Status: Active
+✓ Mode: ${Ladybug.public ? 'Public' : 'Self'}
 
-case 'ping':
-case 'speed': {
-const timestamp = require('performance-now')
-const startTime = timestamp()
-const pingMsg = await Tkm.sendMessage(from, { text: '🐞 Testing speed...' }, { quoted: m })
-const endTime = timestamp()
-const ping = (endTime - startTime).toFixed(2)
-await Tkm.sendMessage(from, { 
-text: `╭━━━『 *🐞 PING* 』━━━╮
-│
-│ ⚡ Speed: ${ping} ms
-│ 📡 Status: Active
-│ 🚀 Performance: Optimal
-│
-╰━━━━━━━━━━━━━━━━━━━╯`, 
-edit: pingMsg.key 
-})
-}
-break
+_Bot is running smoothly!_`)
+            }
+            break
 
-case 'runtime':
-case 'uptime': {
-reply(`╭━━━『 *🐞 RUNTIME* 』━━━╮
-│
-│ ⏱️ Runtime: ${runtime(process.uptime())}
-│ 📅 Started: ${moment(process.uptime() * 1000).format('DD/MM/YYYY')}
-│ 🚀 Status: Online
-│
-╰━━━━━━━━━━━━━━━━━━━╯`)
-}
-break
+            case 'ping':
+            case 'speed': {
+                const start = speed()
+                const end = speed()
+                const latency = (end - start).toFixed(4)
+                reply(`🏓 Pong!\n\n⚡ Speed: ${latency}ms`)
+            }
+            break
 
-case 'owner':
-case 'creator': {
-Tkm.sendContact(from, [owner], '🐞 Ladybug Bot Creator', m)
-reply('👆 Above is the bot owner contact!')
-}
-break
+            case 'runtime':
+            case 'uptime': {
+                reply(`🤖 *Bot Runtime*\n\n⏰ ${func.runtime(process.uptime())}`)
+            }
+            break
 
-case 'tagall': {
-if (!m.isGroup) return reply('⚠️ This command can only be used in groups!')
-if (!isAdmins && !isCreator) return reply('⚠️ This command is only for group admins!')
-let teks = `╭━━━『 *📢 TAG ALL* 』━━━╮
-│
-│ 💬 Message: ${q ? q : 'No message'}
-│
-╰━━━━━━━━━━━━━━━━━━━╯\n\n`
-for (let mem of participants) {
-teks += `🐞 @${mem.id.split('@')[0]}\n`
-}
-Tkm.sendMessage(from, { text: teks, mentions: participants.map(a => a.id) }, { quoted: m })
-}
-break
+            case 'owner':
+            case 'creator': {
+                await Ladybug.sendContact(m.chat, [global.owner], m)
+                reply(`👤 *Bot Owner*\n\n📞 Contact the owner for support or inquiries.`)
+            }
+            break
 
-case 'hidetag': {
-if (!m.isGroup) return reply('⚠️ This command can only be used in groups!')
-if (!isAdmins && !isCreator) return reply('⚠️ This command is only for group admins!')
-Tkm.sendMessage(from, { text: q ? q : '🐞 Ladybug notification!', mentions: participants.map(a => a.id) }, { quoted: m })
-}
-break
+            // ========== OWNER COMMANDS ==========
 
-case 'self': {
-if (!isCreator) return reply('⚠️ This command is only for the bot owner!')
-Tkm.public = false
-reply('✓ Bot is now in *Self Mode*')
-}
-break
+            case 'join': {
+                if (!isOwner) return reply('❌ This command is only for the bot owner!')
+                if (!text) return reply('❌ Please provide a group link!\n\nExample: ' + prefix + 'join https://chat.whatsapp.com/xxxxx')
+                
+                try {
+                    let linkRegex = /chat.whatsapp.com\/([0-9A-Za-z]{20,24})/i
+                    let [_, code] = text.match(linkRegex) || []
+                    if (!code) return reply('❌ Invalid group link!')
+                    
+                    let res = await Ladybug.groupAcceptInvite(code)
+                    reply('✅ Successfully joined the group!')
+                } catch (e) {
+                    console.log(e)
+                    reply('❌ Failed to join the group!\n\n' + e.message)
+                }
+            }
+            break
 
-case 'public': {
-if (!isCreator) return reply('⚠️ This command is only for the bot owner!')
-Tkm.public = true
-reply('✓ Bot is now in *Public Mode*')
-}
-break
+            case 'leave': {
+                if (!isOwner) return reply('❌ This command is only for the bot owner!')
+                if (!isGroup) return reply('❌ This command can only be used in groups!')
+                
+                await reply('👋 Goodbye! The bot is leaving this group.')
+                await Ladybug.groupLeave(m.chat)
+            }
+            break
 
-default:
-if (budy.startsWith('=>')) {
-if (!isCreator) return reply('⚠️ Owner only command!')
-function Return(sul) {
-sat = JSON.stringify(sul, null, 2)
-bang = util.format(sat)
-if (sat == undefined) {
-bang = util.format(sul)
-}
-return reply(bang)
-}
-try {
-reply(util.format(eval(`(async () => { return ${budy.slice(3)} })()`)))
-} catch (e) {
-reply(String(e))
-}
-}
+            case 'block': {
+                if (!isOwner) return reply('❌ This command is only for the bot owner!')
+                
+                let users = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+                await Ladybug.updateBlockStatus(users, 'block')
+                reply(`✅ Successfully blocked ${users.split('@')[0]}`)
+            }
+            break
 
-if (budy.startsWith('>')) {
-if (!isCreator) return reply('⚠️ Owner only command!')
-try {
-let evaled = await eval(budy.slice(2))
-if (typeof evaled !== 'string') evaled = require('util').inspect(evaled)
-await reply(evaled)
-} catch (err) {
-await reply(String(err))
-}
-}
+            case 'unblock': {
+                if (!isOwner) return reply('❌ This command is only for the bot owner!')
+                
+                let users = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+                await Ladybug.updateBlockStatus(users, 'unblock')
+                reply(`✅ Successfully unblocked ${users.split('@')[0]}`)
+            }
+            break
 
-if (budy.startsWith('$')) {
-if (!isCreator) return reply('⚠️ Owner only command!')
-exec(budy.slice(2), (err, stdout) => {
-if(err) return reply(err)
-if (stdout) return reply(stdout)
-})
-}
-}
+            case 'setppbot':
+            case 'setpp': {
+                if (!isOwner) return reply('❌ This command is only for the bot owner!')
+                if (!quoted) return reply('❌ Reply to an image!')
+                if (!/image/.test(mime)) return reply('❌ Reply to an image!')
+                
+                try {
+                    let media = await Ladybug.downloadAndSaveMediaMessage(quoted)
+                    await Ladybug.updateProfilePicture(botNumber, { url: media })
+                    fs.unlinkSync(media)
+                    reply('✅ Profile picture updated successfully!')
+                } catch (e) {
+                    console.log(e)
+                    reply('❌ Failed to update profile picture!')
+                }
+            }
+            break
 
-} catch (err) {
-console.log(util.format(err))
-}
-}
+            case 'broadcast':
+            case 'bc': {
+                if (!isOwner) return reply('❌ This command is only for the bot owner!')
+                if (!text) return reply('❌ Please provide a message to broadcast!\n\nExample: ' + prefix + 'broadcast Hello everyone!')
+                
+                let getGroups = await Ladybug.groupFetchAllParticipating()
+                let groups = Object.entries(getGroups).slice(0).map(entry => entry[1])
+                let anu = groups.map(v => v.id)
+                
+                reply(`📢 Broadcasting to ${anu.length} groups...`)
+                
+                for (let i of anu) {
+                    await func.sleep(1500)
+                    let txt = `*「 BROADCAST MESSAGE 」*\n\n${text}\n\n_This is a broadcast message from the bot owner._`
+                    await Ladybug.sendMessage(i, { text: txt })
+                }
+                
+                reply('✅ Broadcast sent successfully!')
+            }
+            break
 
-let file = require.resolve(__filename)
-fs.watchFile(file, () => {
-fs.unwatchFile(file)
-console.log(chalk.redBright(`Update ${__filename}`))
-delete require.cache[file]
-require(file)
-})
+            case 'eval': {
+                if (!isOwner) return reply('❌ This command is only for the bot owner!')
+                if (!text) return reply('❌ Please provide code to evaluate!')
+                
+                try {
+                    let evaled = await eval(text)
+                    if (typeof evaled !== 'string') evaled = require('util').inspect(evaled)
+                    reply(evaled)
+                } catch (err) {
+                    reply(String(err))
+                }
+            }
+            break
+
+            case 'exec': {
+                if (!isOwner) return reply('❌ This command is only for the bot owner!')
+                if (!text) return reply('❌ Please provide a command to execute!')
+                
+                exec(text, (err, stdout) => {
+                    if (err) return reply(err.toString())
+                    if (stdout) return reply(stdout.toString())
+                })
+            }
+            break
+
+            // ========== GROUP COMMANDS ==========
+
+            case 'welcome': {
+                if (!isGroup) return reply('❌ This command can only be used in groups!')
+                if (!isAdmins && !isOwner) return reply('❌ This command is only for group admins!')
+                
+                let welcome = JSON.parse(fs.readFileSync('./all/database/welcome.json'))
+                
+                if (args[0] === 'on') {
+                    if (welcome.includes(m.chat)) return reply('✅ Welcome is already enabled!')
+                    welcome.push(m.chat)
+                    fs.writeFileSync('./all/database/welcome.json', JSON.stringify(welcome, null, 2))
+                    reply('✅ Welcome feature enabled!')
+                } else if (args[0] === 'off') {
+                    if (!welcome.includes(m.chat)) return reply('❌ Welcome is already disabled!')
+                    let off = welcome.indexOf(m.chat)
+                    welcome.splice(off, 1)
+                    fs.writeFileSync('./all/database/welcome.json', JSON.stringify(welcome, null, 2))
+                    reply('✅ Welcome feature disabled!')
+                } else {
+                    reply(`❌ Usage: ${prefix}welcome on/off`)
+                }
+            }
+            break
+
+            case 'promote': {
+                if (!isGroup) return reply('❌ This command can only be used in groups!')
+                if (!isAdmins && !isOwner) return reply('❌ This command is only for group admins!')
+                if (!isBotAdmins) return reply('❌ Bot needs to be admin to use this command!')
+                
+                let users = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+                await Ladybug.groupParticipantsUpdate(m.chat, [users], 'promote')
+                reply(`✅ Successfully promoted @${users.split('@')[0]}`)
+            }
+            break
+
+            case 'demote': {
+                if (!isGroup) return reply('❌ This command can only be used in groups!')
+                if (!isAdmins && !isOwner) return reply('❌ This command is only for group admins!')
+                if (!isBotAdmins) return reply('❌ Bot needs to be admin to use this command!')
+                
+                let users = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+                await Ladybug.groupParticipantsUpdate(m.chat, [users], 'demote')
+                reply(`✅ Successfully demoted @${users.split('@')[0]}`)
+            }
+            break
+
+            case 'kick': {
+                if (!isGroup) return reply('❌ This command can only be used in groups!')
+                if (!isAdmins && !isOwner) return reply('❌ This command is only for group admins!')
+                if (!isBotAdmins) return reply('❌ Bot needs to be admin to use this command!')
+                
+                let users = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+                await Ladybug.groupParticipantsUpdate(m.chat, [users], 'remove')
+                reply(`✅ Successfully kicked @${users.split('@')[0]}`)
+            }
+            break
+
+            case 'add': {
+                if (!isGroup) return reply('❌ This command can only be used in groups!')
+                if (!isAdmins && !isOwner) return reply('❌ This command is only for group admins!')
+                if (!isBotAdmins) return reply('❌ Bot needs to be admin to use this command!')
+                if (!text) return reply('❌ Please provide a number!\n\nExample: ' + prefix + 'add 263777123456')
+                
+                let users = text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+                await Ladybug.groupParticipantsUpdate(m.chat, [users], 'add')
+                reply(`✅ Successfully added ${text}`)
+            }
+            break
+
+            case 'tagall': {
+                if (!isGroup) return reply('❌ This command can only be used in groups!')
+                if (!isAdmins && !isOwner) return reply('❌ This command is only for group admins!')
+                
+                let teks = `*「 TAG ALL 」*\n\n${text ? text : 'No message'}\n\n`
+                for (let mem of participants) {
+                    teks += `» @${mem.id.split('@')[0]}\n`
+                }
+                Ladybug.sendMessage(m.chat, { text: teks, mentions: participants.map(a => a.id) }, { quoted: m })
+            }
+            break
+
+            case 'hidetag': {
+                if (!isGroup) return reply('❌ This command can only be used in groups!')
+                if (!isAdmins && !isOwner) return reply('❌ This command is only for group admins!')
+                
+                Ladybug.sendMessage(m.chat, { text: text ? text : '', mentions: participants.map(a => a.id) }, { quoted: m })
+            }
+            break
+
+            case 'group': {
+                if (!isGroup) return reply('❌ This command can only be used in groups!')
+                if (!isAdmins && !isOwner) return reply('❌ This command is only for group admins!')
+                if (!isBotAdmins) return reply('❌ Bot needs to be admin to use this command!')
+                
+                if (args[0] === 'close') {
+                    await Ladybug.groupSettingUpdate(m.chat, 'announcement')
+                    reply('✅ Group successfully closed!')
+                } else if (args[0] === 'open') {
+                    await Ladybug.groupSettingUpdate(m.chat, 'not_announcement')
+                    reply('✅ Group successfully opened!')
+                } else {
+                    reply(`❌ Usage: ${prefix}group open/close`)
+                }
+            }
+            break
+
+            // ========== STICKER COMMANDS ==========
+
+            case 'sticker':
+            case 's': {
+                if (!quoted) return reply('❌ Reply to an image or video!')
+                if (/image/.test(mime)) {
+                    let media = await quoted.download()
+                    let encmedia = await Ladybug.sendImageAsSticker(m.chat, media, m, { packname: global.packname, author: global.author })
+                } else if (/video/.test(mime)) {
+                    if ((quoted.msg || quoted).seconds > 11) return reply('❌ Maximum 10 seconds video!')
+                    let media = await quoted.download()
+                    let encmedia = await Ladybug.sendVideoAsSticker(m.chat, media, m, { packname: global.packname, author: global.author })
+                } else {
+                    reply('❌ Reply to an image or video!')
+                }
+            }
+            break
+
+            // ========== DEFAULT ==========
+
+            default:
+                // If no command matches
+                if (isCmd && budy.startsWith(prefix)) {
+                    reply(`❌ Command not found!\n\nType *${prefix}menu* to see available commands.`)
+                }
+        }
+
+    } catch (err) {
+        console.log(chalk.red('Error in Ladybug.js:'), err)
+        m.reply('❌ An error occurred while processing your command!')
+    }
+}
